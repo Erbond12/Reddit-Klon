@@ -1,0 +1,36 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - bash: |
+        touch $(Build.SourcesDirectory)/backend/app/.env
+        printf "NEO4J_USERNAME =  \nNEO4J_PASSWORD =  \nNEO4J_BOLT_URL = \"\" \nMONGODB_URI = \"\" \nJWT_SECRET_KEY = \"\" \nREDIS_DSN = \"\" \nNEO4J_TEST_USERNAME =  \nNEO4J_TEST_PASSWORD =  \nNEO4J_TEST_BOLT_URL = \"\" \nMONGODB_TEST_URI = \"" \nTEST_USER_EMAIL = \"\" \nTEST_USER_USERNAME = \"\" \nTEST_USER_PASSWORD = \"\" \nAZURE_STORAGE_CREDENTIALS = \"DefaultEndpointsProtocol=https;AccountName=;AccountKey=;EndpointSuffix=core.windows.net\"" > $(Build.SourcesDirectory)/backend/app/.env
+
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        containerRegistry: 'SchredditRegistry'
+        repository: 'backend'
+        command: 'buildAndPush'
+        Dockerfile: '**/backend/Dockerfile'
+        tags: |
+          $(tag)
+          latest
